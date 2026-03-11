@@ -13,11 +13,11 @@ from config import REDIS_HOST, REDIS_PORT
 
 router = APIRouter()
 
-cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True)
+cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0, decode_responses=True, socket_timeout=2.0, socket_connect_timeout=2.0)
 
 CACHE_TTL = 3600  # сек
 
-@router.post("/shorten", response_model=LinkResponse)
+@router.post("/links/shorten", response_model=LinkResponse)
 async def shorten_url(
     request: ShortenRequest,
     db: Session = Depends(get_db),
@@ -55,7 +55,7 @@ async def shorten_url(
         pass
     return LinkResponse.from_orm(link)
 
-@router.get("/{short_code}")
+@router.get("/links/{short_code}")
 async def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
     # Try cache first
     cached = None
@@ -93,7 +93,7 @@ async def redirect_to_url(short_code: str, db: Session = Depends(get_db)):
 
     return RedirectResponse(url=link.original_url)
 
-@router.delete("/{short_code}")
+@router.delete("/links/{short_code}")
 async def delete_link(
     short_code: str,
     db: Session = Depends(get_db),
@@ -118,7 +118,7 @@ async def delete_link(
         pass
     return {"message": "Link deleted"}
 
-@router.put("/{short_code}", response_model=LinkResponse)
+@router.put("/links/{short_code}", response_model=LinkResponse)
 async def update_link(
     short_code: str,
     request: UpdateLinkRequest,
@@ -150,7 +150,7 @@ async def update_link(
         pass
     return LinkResponse.from_orm(link)
 
-@router.get("/{short_code}/stats", response_model=StatsResponse)
+@router.get("/links/{short_code}/stats", response_model=StatsResponse)
 async def get_link_stats(short_code: str, db: Session = Depends(get_db)):
     link = db.query(Link).filter(
         (Link.short_code == short_code) | (Link.custom_alias == short_code)
@@ -165,7 +165,7 @@ async def get_link_stats(short_code: str, db: Session = Depends(get_db)):
         last_accessed=link.last_accessed
     )
 
-@router.get("/search")
+@router.get("/links/search")
 async def search_by_original_url(
     original_url: str = Query(...),
     db: Session = Depends(get_db)
