@@ -1,0 +1,12 @@
+FastAPI
+uvicorn
+SQLAlchemy
+psycopg2-binary
+redis
+pydantic
+pydantic[email]
+python-dotenv
+pytest
+httpx
+passlib
+PyJWT
